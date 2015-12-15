@@ -1,0 +1,2 @@
+NLLoc_code contains the required NLLoc code, although it is suggested that more recent versions may be better
+GridLib.c contains a patched version of InterpCubeAngles which checks for 360->0 changes in azimuth when interpolating (Fixed as of 2013\08\23 in beta version, but may not be fixed in the latest release)

@@ -100,10 +100,10 @@ Which will then be changed to:
 
 Note that the single control file is changed to one for each program
 
-Running on the cluster
+Running on a cluster
 *********************************
 
-It is also possible to run this code on a cluster using qsub. This can be called from the commandline using a flag:
+It is also possible to run this code on a cluster using qsub and pyqsub. This can be called from the commandline using a flag:
 
     * -q, --qsub, --pbs
 

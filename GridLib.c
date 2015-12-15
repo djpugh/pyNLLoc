@@ -1890,16 +1890,24 @@ INLINE float InterpCubeAngles(DOUBLE xdiff, DOUBLE ydiff, DOUBLE zdiff,
 
 
     /* check for lowest quality angles */
-
+    //    correct azimuths to avoid discontinuity at 0/360 deg
     iqual_low = 999;
-    for (nx = 0; nx < 2; nx++)
-        for (ny = 0; ny < 2; ny++)
+    azim_ref = azim[0][0][0];
+    for (nx = 0; nx < 2; nx++) {
+        for (ny = 0; ny < 2; ny++) {
             for (nz = 0; nz < 2; nz++) {
                 //printf("%d %d %d az %f dip %f q %d\n", nx, ny, nz, azim[nx][ny][nz], dip[nx][ny][nz], iqual[nx][ny][nz]);
                 if (iqual[nx][ny][nz] < iqual_low)
                     iqual_low = iqual[nx][ny][nz];
+                azim_test = azim[nx][ny][nz] - azim_ref;
+                if (azim_test < -90.0) {
+                    azim[nx][ny][nz] += 360.0;
+                } else if (azim_test > 90.0) {
+                    azim[nx][ny][nz] -= 360.0;
+                }
             }
-
+        }
+    }
 
     /* determine angles to return */
 
@@ -1908,78 +1916,6 @@ INLINE float InterpCubeAngles(DOUBLE xdiff, DOUBLE ydiff, DOUBLE zdiff,
         value = vval000;
     } else {
         /* otherwise interpolate */
-        /* Handle azimuth changes */
-        /* Check values to see if there is a delta of 180 or more and if so add 360 to values less than 180*/
-        double max,min,delta;
-        /* find maximum split between values */
-        //000
-        max=azim[0][0][0];
-        min=azim[0][0][0];
-        //001
-        if (azim[0][0][1]>max)
-        {max=azim[0][0][1];}
-        if (azim[0][0][1]<min)
-        {min=azim[0][0][1];}
-        //010
-        if (azim[0][1][0]>max)
-        {max=azim[0][1][0];}
-        if (azim[0][1][0]<min)
-        {min=azim[0][1][0];}
-        //011
-        if (azim[0][1][1]>max)
-        {max=azim[0][1][1];}
-        if (azim[0][1][1]<min)
-        {min=azim[0][1][1];}
-        //100
-        if (azim[1][0][0]>max)
-        {max=azim[1][0][0];}
-        if (azim[1][0][0]<min)
-        {min=azim[1][0][0];}
-        //101
-        if (azim[1][0][1]>max)
-        {max=azim[1][0][1];}
-        if (azim[1][0][1]<min)
-        {min=azim[1][0][1];}
-        //110
-        if (azim[1][1][0]>max)
-        {max=azim[1][1][0];}
-        if (azim[1][1][0]<min)
-        {min=azim[1][1][0];}
-        //111
-        if (azim[1][1][1]>max)
-        {max=azim[1][1][1];}
-        if (azim[1][1][1]<min)
-        {min=azim[1][1][1];}
-        //check delta
-        delta=max-min;
-        if (delta>180.0)
-        {
-            /* add 360 to values less than 180 */
-            //000
-            if (azim[0][0][0]<180.0)
-            {azim[0][0][0]+=360.0;}
-            //001
-            if (azim[0][0][1]<180.0)
-            {azim[0][0][1]+=360.0;}
-            //010
-            if (azim[0][1][0]<180.0)
-            {azim[0][1][0]+=360.0;}
-            //011
-            if (azim[0][1][1]<180.0)
-            {azim[0][1][1]+=360.0;}
-            //100
-            if (azim[1][0][0]<180.0)
-            {azim[1][0][0]+=360.0;}
-            //101
-            if (azim[1][0][1]<180.0)
-            {azim[1][0][1]+=360.0;}
-            //110
-            if (azim[1][1][0]<180.0)
-            {azim[1][1][0]+=360.0;}
-            //111
-            if (azim[1][1][1]<180.0)
-            {azim[1][1][1]+=360.0;}
-        }
         azim_interp = InterpCubeLagrange(xdiff, ydiff, zdiff,
                 azim[0][0][0], azim[0][0][1], azim[0][1][0],
                 azim[0][1][1], azim[1][0][0], azim[1][0][1],
