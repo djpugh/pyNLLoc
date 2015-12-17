@@ -1,16 +1,53 @@
 #!/usr/bin/python
 """XYZ2Angle
-======================
+****************************
 
-XYZ2Angle is a python wrapper for the C++ executable compiled from getAngles.cpp. 
-This uses some of the functions in the NonLinLoc code (specifically GridLib and it's dependencies)
+XYZ2Angle converts input x,  y, z, values in km or latitude longitude depth value to take-off angles and azimuths for the set of recievers.
+
+It is a python wrapper for the C++ executable compiled from getAngles.cpp. This uses some of the functions in the NonLinLoc code (specifically GridLib and it's dependencies)
 to convert the a given x,y,z location into take-off angle samples for all stations. 
 
 To compile the executable, it is necesary to compile some other components into object code. For an example, please see the make_angles.sh file, or the README.
 
 This uses Scat2Angle to convert XYZ coordinates into a location file, and then evaluates the take-off angles.
 
+Command line flags
+*********************************
+To obtain a list of the command line flags use the -h flag::
 
+    $~ XYZ2Angle -h
+
+This will provide a list of the arguments and their usage.
+
+
+Running from the command line
+*********************************
+To run from the command line on  linux/*nix  it is necessary to make sure that the XYZ2Angle script installed is on the path,
+or to set up a manual alias/script, e.g. for bash::
+
+    python -c "import XYZ2Angle;XYZ2Angle.__run__()" $*
+
+
+On windows (Requires NLLoc programs to be installed on windows too) using powershell add the following commandlet to your profile (for information on customizing your powershell profile see: http://www.howtogeek.com/50236/customizing-your-powershell-profile/)::
+
+    function XYZ2Angle{
+        $script={
+            python -c "import XYZ2Angle;XYZ2Angle.__run__()" $args
+        }
+        Invoke-Command -ScriptBlock $script -ArgumentList $args
+    }
+
+
+
+Running from within python
+*********************************
+To run from within python, (assuming the module is on your PYTHONPATH)::
+
+    >>import XYZ2Angle
+    >>XYZ2Angle.__run__()
+
+This will run with the default options, although these can be customized - see the XYZ2Angle.__run__ docstrings.
+ 
 """
 try:
     import argparse
@@ -18,7 +55,21 @@ try:
 except:
     _ARGPARSE=False
 import Scat2Angle,struct,shutil,os,glob,textwrap
-def makeScatter(x,y,z,endian='='):
+def make_scatter_file(x,y,z,endian='='):
+    """Make the scatter file for the x y z coordinates
+
+    Args
+        x: float x coordinate
+        y: float y coordinate
+        z: float z coordinate
+
+    Keyword Args
+        endian: endian value for binary numbers
+
+    Returns:
+        str: 'xyz.scat' scatter file name
+
+    """
     import struct
     fid=open('xyz.scat','wb')
     fid.write(struct.pack(endian+'I',1))
@@ -28,61 +79,97 @@ def makeScatter(x,y,z,endian='='):
     fid.write(struct.pack(endian+'ffff',x,y,z,1))
     fid.close()
     return 'xyz.scat'
-def run(x,y,z,gridPath='./time/',endian='=',mode='P'):
-    stationFile=Scat2Angle.writeStations(Scat2Angle.getStations(gridPath,mode),gridPath)
-    scatterFile=makeScatter(x,y,z,endian)
-    Scat2Angle.run(stationFile,scatterFile)
+def get_angles(x,y,z,grid_path='./grid/',endian='=',phase='P'):
+    """Runs the conversion of x y z to angles
+
+    Args
+        x: float x coordinate
+        y: float y coordinate
+        z: float z coordinate
+
+    Keyword Args
+        grid_path: str path to grid files for angle calculation
+        endian: endian value
+        phase: str phase to calculate angles for
+    """
+    station_file=Scat2Angle.write_stations(Scat2Angle.get_stations(grid_path,phase),grid_path)
+    scatter_file=make_scatter_file(x,y,z,endian)
+    Scat2Angle.get_angles(station_file,scatter_file)
     os.remove('xyz.scat')
     shutil.move('xyz.scatangle','xyz.angle')
-def latlon2xyz(lat,lon,depth,lat0,lon0,lat1,lat2):
+def latlon_xyz(latitude,longitude,depth,latitude_0,longitude_0,latitude_1,latitude_2):
+    """Converts latitude and longitude into x y z
+
+    Uses pyproj abd lambert projection to convert the coordinates using a given origin.
+
+    Args
+        latitude: float latitude in degrees
+        longitude: float longitude in degrees
+        depth: float depth in km
+        latitude_0: float latitude of origin in degrees
+        longitude_0: float longitude of origin in degrees 
+        latitude_1: float latitude of first standard parallel in degrees 
+        latitude_2: float latitude of second standard parallel in degrees 
+
+    Returns
+        (float,float,float): tuple of x, y, z coordinates in km from latitude_0 and longitude_0 origin
+    """
     from pyproj import Proj
-    p=Proj('+proj=lcc +lat_0='+lat0+' +lon_0='+lon0+' +lat_1='+lat1+' +lat_2='+lat2,ellps='WGS84')
-    [x0,y0]=p(float(lon0),float(lat0))
-    [x,y]=p(lon,lat)
-    return (x-x0)/1000,(y-y0)/1000,depth
-def __main__():
+    p=Proj('+proj=lcc +lat_0='+str(latitude_0)+' +lon_0='+str(longitude_0)+' +lat_1='+str(latitude_1)+' +lat_2='+str(latitude_2),ellps='WGS84')
+    [x_0,y_0]=p(float(longitude_0),float(latitude_0))
+    [x,y]=p(longitude,latitude)
+    return (x-x_0)/1000.,(y-y_0)/1000.,depth
+def __run__():
+    """Main function for running XYZ2Angle from command line.
+
+    For command line options, use the '-h' flag.
+    """
     options=__parser__()
-    if os.path.isdir(options['gridpath']):
-        options['gridpath']=options['gridpath'].rstrip(os.path.sep)+os.path.sep
+    if os.path.isdir(options['grid_path']):
+        options['grid_path']=options['grid_path'].rstrip(os.path.sep)+os.path.sep
     if not options['xyz']:
-        headerFile=glob.glob(options['gridpath']+'*.hdr')[0]
-        lat0,lon0,lat1,lat2=__headerparser__(headerFile)
-        [options['X'],options['Y'],options['Z']]=latlon2xyz(options['X'],options['Y'],options['Z'],lat0,lon0,lat1,lat2)
-    run(options['X'],options['Y'],options['Z'],options['gridpath'],options['endian'],options['mode'])
+        header_file=glob.glob(options['grid_path']+'*.hdr')[0]
+        lat0,lon0,lat1,lat2=parse_header_file(header_file)
+        [options['X'],options['Y'],options['Z']]=latlon_xyz(options['X'],options['Y'],options['Z'],lat0,lon0,lat1,lat2)
+    get_angles(options['X'],options['Y'],options['Z'],options['grid_path'],options['endian'],options['phase'])
     output=open('xyz.angle').readlines()
     print 'Results for Location:\nX:'+str(options['X'])+' km  Y:'+str(options['Y'])+' km  Z:'+str(options['Z'])+' km\n'
     print ''.join(output[1:])
-def __headerparser__(fileName):
-    lines=open(fileName).readlines()
-    lat0=lines[2].split()[5]
-    lon0=lines[2].split()[7]
-    lat1=lines[2].split()[9]
-    lat2=lines[2].split()[11]
-    return lat0,lon0,lat1,lat2
-def isPath(string):
-    if not string:
-        return string        
-    elif ',' in string:
-        #list
-        files=string.lstrip('[').rstrip(']').split(',')
-        for i,f in enumerate(files):
-            files[i]=isPath(f)
-        return files
-    elif string and '*' in string and os.path.exists(os.path.abspath(os.path.split(string)[0])):
-        return glob.glob(os.path.abspath(os.path.split(string)[0])+os.path.sep+os.path.split(string)[1])
-    elif string and '*' not in string and os.path.exists(os.path.abspath(string)):
-        return os.path.abspath(string)
-    if _ARGPARSE:
-        raise argparse.ArgumentTypeError('Path: "'+string+'" does not exist')
-    else:
-        raise ValueError('Path: "'+string+'" does not exist')
-def __parser__(inputArgs=False):
+def time():
+    raise NotImplementedError()
+    print 'To use XYZ2Time'
+
+def parse_header_file(filename):
+    """Parses hdr file for grid origin and parallels (Lambert transform)
+
+    Args
+        filename: str header filename
+
+    Returns
+        (float,float,float,float): tuple of floats for latitude and longitude of the origin and
+                                     the latitiudes of the first and second standard parallels
+    """
+    lines=open(filename).readlines()
+    latitude_0=lines[2].split()[5]
+    longitude_0=lines[2].split()[7]
+    latitude_1=lines[2].split()[9]
+    latitude_2=lines[2].split()[11]
+    return latitude_0,longitude_0,latitude_1,latitude_2
+def __parser__(input_args=False):
+    """Command line parser for XYZ2Angle
+
+    Keyword Args
+        input_args: list of input arguments (defaults to sys.argv)
+
+    Returns
+        dict: dictionary of selected command line options.
+    """
     description="""XYZ2Angle - Wrapper to convert lat/lon/depth or XYZ coordinates to angles using NLLoc by David Pugh (Bullard Laboratories, Department of Earth Sciences, University of Cambridge) 
-"""
+    """
     optparsedescription="""Arguments are set as below, syntax is -gTest or --gridpath=Test
-"""
+    """
     argparsedescription="""Arguments are set as below, syntax is -gTest or -g Test
-""" 
+    """ 
     if _ARGPARSE:
         class IndentedHelpFormatterWithNL(argparse.RawDescriptionHelpFormatter):
             def _format_action(self, action):
@@ -142,12 +229,12 @@ def __parser__(inputArgs=False):
         parser.add_argument('X',type=float,help="Latitude in degrees/X coordinate in km (-x flag required)")
         parser.add_argument('Y',type=float,help="Longitude in degrees/Y coordinate in km (-x flag required)")
         parser.add_argument('Z',type=float,help="Depth in km/Z coordinate in km (-x flag required)")
-        parser.add_argument("-g","--gridpath","--grid_path",help='Grid files path use for the location,defaults to  current directory',dest='gridpath',default='./')
+        parser.add_argument("-g","--gridpath","--grid_path",help='Grid files path use for the location,defaults to  current directory',dest='grid_path',default='./')
         parser.add_argument("-x","--xyz",help='Using XYZ coordinates in km relative to geographic origin',action='store_true',dest='xyz',default=False)
         parser.add_argument("-e","--endian",help='Endian value to use',choices=['=','<','>','@','!'],dest='endian',default='=')
-        parser.add_argument("-m","--mode",help="Set grid phase mode to use e.g. P or S",dest='mode',default='P')
-        if inputArgs:
-            options=parser.parse_args(inputArgs)
+        parser.add_argument("-p","--phase",help="Set grid phase to use e.g. P or S",dest='phase',default='P')
+        if input_args:
+            options=parser.parse_args(input_args)
         else:
             options=parser.parse_args()
         options=vars(options)
@@ -216,14 +303,16 @@ def __parser__(inputArgs=False):
         parser.add_option('X',type=float,help="Latitude in degrees/X coordinate in km (-x flag required)")
         parser.add_option('Y',type=float,help="Longitude in degrees/Y coordinate in km (-x flag required)")
         parser.add_option('Z',type=float,help="Depth in km/Z coordinate in km (-x flag required)")
-        parser.add_option("-g","--gridpath","--grid_path",help='Grid files path use for the location,defaults to  current directory',dest='gridpath',default=False)
+        parser.add_option("-g","--gridpath","--grid_path",help='Grid files path use for the location,defaults to  current directory',dest='grid_path',default=False)
         parser.add_option("-x","--xyz",help='Using XYZ coordinates in km relative to geographic origin',action='store_true',dest='XYZ',default=False)
         parser.add_option("-e","--endian",help='Endian value to use',choices=['=','<','>','@','!'],dest='endian',default='=')
-        parser.add_option("-m","--mode",help="Set grid phase mode to use e.g. P or S",dest='mode',default='P')
-        if inputArgs and len(inputArgs):
-            (options,args)=parser.parse_args(inputArgs)
+        parser.add_option("-p","--phase",help="Set grid  phase to use e.g. P or S",dest='phase',default='P')
+        if input_args and len(input_args):
+            (options,args)=parser.parse_args(input_args)
         else:
             (options,args)=parser.parse_args()
         options=vars(options)        
-    return options  
+    return options        
+if __name__=="__main__":
+    __run__()
 

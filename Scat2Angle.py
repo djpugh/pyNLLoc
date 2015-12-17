@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """Scat2Angle
-======================
+***********************
 
 Scat2Angle is a python wrapper for the C++ executable compiled from getAngles.cpp. 
 This uses some of the functions in the NonLinLoc code (specifically GridLib and it's dependencies)
@@ -20,16 +20,45 @@ where the grid files are in ~/mynlloc/time and begin with e.g. grid.***** for th
 
 There is an optional third line which sets the phase to use (i.e. P or S), where the default is P.
 
-Using Scat2Angle
-========================
 
-    Scat2Angle [-h/--help] [-g/--grid] control_file
 
-Command Line Options
+Command line flags
+*********************************
+To obtain a list of the command line flags use the -h flag::
 
-    -h, --help = flag to show help message
+    $~ Scat2Angle -h
 
-    -g, --grid = flag to keep location sample probability values (for grid type sampling, rather than Markov chain sampling).
+This will provide a list of the arguments and their usage.
+
+
+Running from the command line
+*********************************
+To run from the command line on  linux/*nix  it is necessary to make sure that the Scat2Angle script installed is on the path,
+or to set up a manual alias/script, e.g. for bash::
+
+    python -c "import Scat2Angle;Scat2Angle.__run__()" $*
+
+
+On windows (Requires NLLoc programs to be installed on windows too) using powershell add the following commandlet to your profile (for information on customizing your powershell profile see: http://www.howtogeek.com/50236/customizing-your-powershell-profile/)::
+
+    function Scat2Angle{
+        $script={
+            python -c "import Scat2Angle;Scat2Angle.__run__()" $args
+        }
+        Invoke-Command -ScriptBlock $script -ArgumentList $args
+    }
+
+
+
+Running from within python
+*********************************
+To run from within python, (assuming the module is on your PYTHONPATH)::
+
+    >>import Scat2Angle
+    >>Scat2Angle.__run__()
+
+This will run with the default options, although these can be customized - see the Scat2Angle.__run__ docstrings.
+ 
 
 """
 EXECUTABLE="GetNLLOCScatterAngles"#Default name for C++ executable compiled using make_angles.sh
@@ -92,7 +121,7 @@ def write_stations(stations,grid_root):
     """
     open(os.path.split(grid_root)[0]+'/stations.txt','w').write(''.join(stations))
     return os.path.split(grid_root)[0]+'/stations.txt'    
-def run(station_file,scatter_file,grid_sampling):
+def get_angles(station_file,scatter_file,grid_sampling):
     """Runs the C++ executable using an os.system call for the input station_file, scatter_file and grid_sampling values
 
     Returns
@@ -103,10 +132,11 @@ def print_help():
     """Prints command line help message.
     """
     print __doc__
-def main():
+def __run__():
     """Main function, called as script
 
     Uses command line arguments to obtain files and runs the C++ executable for each scatter file.
+    For a list of the command line options, use the '-h' flag.
     """
     if len(sys.argv)!=2:
         print 'Requires a control file.'
@@ -121,6 +151,6 @@ def main():
         station_file=write_stations(stations,grid_root)
         scatter_files=get_scatter(scatter_root)
         for scatter_file in scatter_files:
-            run(station_file,scatter_file,grid_sampling)        
+            get_angles(station_file,scatter_file,grid_sampling)        
 if __name__=="__main__":
-    main()
+    __run__()

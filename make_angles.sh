@@ -1,15 +1,16 @@
-BINPATH="../../bin"
-rm getAngles.o
-gcc -c -O3 -Wall ran1/ran1.c -o ran1/ran1.o
-gcc -c -O3 -Wall alomax_matrix/alomax_matrix.c -o alomax_matrix/alomax_matrix.o
-gcc -c -O3 -Wall alomax_matrix/alomax_matrix_svd.c -o alomax_matrix/alomax_matrix_svd.o
-gcc -c -O3 -Wall matrix_statistics/matrix_statistics.c -o matrix_statistics/matrix_statistics.o
-gcc -c -O3 -Wall octtree/octtree.c -o octtree/octtree.o
-gcc -c -O3 -Wall vector/vector.c -o vector/vector.o
-gcc -c -O3 -Wall GridLib.c -o GridLib.o
-gcc -c -O3 -Wall map_project.c -o map_project.o
-gcc -c -O3 -Wall util.c -o util.o
-gcc -c -O3 -Wall geo.c -o geo.o
-g++ -c -O3 getAngles.cpp
-g++ -o $BINPATH/GetNLLOCScatterAngles getAngles.o GridLib.o util.o geo.o map_project.o ran1/ran1.o alomax_matrix/alomax_matrix.o alomax_matrix/alomax_matrix_svd.o matrix_statistics/matrix_statistics.o octtree/octtree.o vector/vector.o
+BINPATH="./"
+NLLOC_PATH="NLLoc_code"
+rm GetAngles.o
+gcc -c -O3 -Wall $NLLOC_PATH/ran1/ran1.c -o $NLLOC_PATH/ran1/ran1.o
+gcc -c -O3 -Wall $NLLOC_PATH/alomax_matrix/alomax_matrix.c -o $NLLOC_PATH/alomax_matrix/alomax_matrix.o
+gcc -c -O3 -Wall $NLLOC_PATH/alomax_matrix/alomax_matrix_svd.c -o $NLLOC_PATH/alomax_matrix/alomax_matrix_svd.o
+gcc -c -O3 -Wall $NLLOC_PATH/matrix_statistics/matrix_statistics.c -o $NLLOC_PATH/matrix_statistics/matrix_statistics.o
+gcc -c -O3 -Wall $NLLOC_PATH/octtree/octtree.c -o $NLLOC_PATH/octtree/octtree.o
+gcc -c -O3 -Wall $NLLOC_PATH/vector/vector.c -o $NLLOC_PATH/vector/vector.o
+gcc -c -O3 -Wall $NLLOC_PATH/GridLib.c -o $NLLOC_PATH/GridLib.o
+gcc -c -O3 -Wall $NLLOC_PATH/map_project.c -o $NLLOC_PATH/map_project.o
+gcc -c -O3 -Wall $NLLOC_PATH/util.c -o $NLLOC_PATH/util.o
+gcc -c -O3 -Wall $NLLOC_PATH/geo.c -o $NLLOC_PATH/geo.o
+g++ -c -O3 -I $NLLOC_PATH GetAngles.cpp
+g++ -o $BINPATH/GetNLLOCScatterAngles GetAngles.o $NLLOC_PATH/GridLib.o $NLLOC_PATH/util.o $NLLOC_PATH/geo.o $NLLOC_PATH/map_project.o $NLLOC_PATH/ran1/ran1.o $NLLOC_PATH/alomax_matrix/alomax_matrix.o $NLLOC_PATH/alomax_matrix/alomax_matrix_svd.o $NLLOC_PATH/matrix_statistics/matrix_statistics.o $NLLOC_PATH/octtree/octtree.o $NLLOC_PATH/vector/vector.o
 

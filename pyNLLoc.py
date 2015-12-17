@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 """pyNLLoc
 =================================
-Python module for running NonLinLoc on a cluster by David J Pugh (Bullard Laboratories, Department of Earth Sciences, University of Cambridge)
-
-This module allows the location program NonLinLoc to be easily run from the command line, including for looping over different velocity models, and running Scat2Angle to convert the scatter file to an angle scatter file.
+This code allows the location program NonLinLoc to be easily run from the command line, including for looping over different velocity models, and running Scat2Angle to convert the scatter file to an angle scatter file.
 
 The code can be called from the command line directly or from within python itself (see below)
 
@@ -158,6 +156,12 @@ import optparse,os,glob,stat,sys,shutil,subprocess,textwrap
 import pyqsub#python module for cluster job submission using qsub.
 from pyqsub import isPath
 def _make_folders(target='.'):
+    """Make folder structure
+
+    Keyword Args
+        target: str file path to run NLLoc in
+
+    """
     os.chdir(target)
     try:
         os.mkdir('loc')
@@ -192,6 +196,18 @@ def _make_folders(target='.'):
     for controlFile in controlFiles:
         shutil.move(controlFile,'run'+os.path.sep+controlFile)
 def _check_control_files(CWD,options=False,model_name=False):
+    """Checks the control files exist and are correctly named
+
+    Also updates the file paths to be absolute for the correct directories
+
+    Args
+        CWD: string current directory path
+
+    Keyword Args
+        options: dict command line parser options
+        model_name: str model name to substitute in Vel2Grid control file
+
+    """
     obsFile=glob.glob('obs/*.out')[0].split('/')[1]
     #Vel2Grid    
     if os.path.exists('run/nlloc_control_vel2grid.in'):
@@ -206,13 +222,13 @@ def _check_control_files(CWD,options=False,model_name=False):
             control[i]="VGOUT "+CWD+'/model/velocity\n'
         if 'INCLUDE' in line:
             if model_name:
-                control[i]='INCLUDE '+model_name+'\n'
+                control[i]='INCLUDE '+model_name+'\n'#Substitute model name for vel file
             else:
                 velmodFiles=[]
                 velmodFiles.extend(glob.glob('run'+os.path.sep+'*.vel'))
                 velmodFiles.extend(glob.glob('run'+os.path.sep+'*.mod'))
                 velmodFiles.extend(glob.glob('run'+os.path.sep+'velmod.txt'))
-                velmod=velmodFiles[0]
+                velmod=velmodFiles[0]#Use velocity model in run directory
                 control[i]='INCLUDE '+CWD+os.path.sep+velmod+'\n'
     _write_control_file(control,'run/nlloc_control_vel2grid.in')
     #Grid2Time P    
@@ -228,6 +244,7 @@ def _check_control_files(CWD,options=False,model_name=False):
     for i,line in enumerate(control):
         if 'GTFILES' in line:
             control[i]="GTFILES "+CWD+'/model/velocity '+CWD+'/time/grid P 0\n'
+        #Get station files from run 
         if 'INCLUDE' in line:
             stationsFiles=glob.glob('run'+os.path.sep+'*.sta')
             stationsFiles.extend(glob.glob('run'+os.path.sep+'stations_grid.txt'))
@@ -248,6 +265,7 @@ def _check_control_files(CWD,options=False,model_name=False):
         if 'GTFILES' in line:
             control[i]="GTFILES "+CWD+'/model/velocity '+CWD+'/time/grid S 0\n'
         if 'INCLUDE' in line:
+        #Get station files from run 
             stationsFiles=glob.glob('run'+os.path.sep+'*.sta')
             stationsFiles.extend(glob.glob('run'+os.path.sep+'stations_grid.txt'))
             stations=stationsFiles[0]
@@ -286,11 +304,25 @@ def _check_control_files(CWD,options=False,model_name=False):
     except:
         pass
 def _write_control_file(control,filename):
-        fcontrol=open(filename,'w')
-        fcontrol.write(''.join(control))
-        fcontrol.close()
-        os.chmod(filename, stat.S_IRWXO| stat.S_IRWXG|stat.S_IRWXU)
+    """Write control file out
+
+    Args
+        control: list of control file lines
+        filename: str control file name
+    """
+    fcontrol=open(filename,'w')
+    fcontrol.write(''.join(control))
+    fcontrol.close()
+    os.chmod(filename, stat.S_IRWXO| stat.S_IRWXG|stat.S_IRWXU)
 def _read_control_file(filename):
+    """Reads control file in
+
+    Args
+        filename: str control file name
+
+    Returns:
+        list: list of control file lines
+    """
     fcontrol=open(filename)
     control=fcontrol.readlines()
     fcontrol.close()
@@ -298,8 +330,12 @@ def _read_control_file(filename):
 
 def _run_nlloc(options=False):
     """Runs the NonLinLoc programs in the target directory. Needs to be preceded by a call to _setup.
+
+    Keyword Args
+        options: dict of command line options
     """
     if options and options['models']:
+        #Loop over models
         models=glob.glob(os.path.splitext(options['models'])[0]+'*.mod')
         for model in models:
             print 'Runing model: '+model
@@ -314,37 +350,61 @@ def _run_nlloc(options=False):
         if options and not options['NoScatter']:
             Scat2Angle("run/nlloc_control_scat2angle.in")
 def Vel2Grid(control_file="run/nlloc_control_vel2grid.in"):
+    """Run Vel2Grid
+
+    Args
+        control_file: str control file path
+    """
     process=subprocess.Popen(['Vel2Grid',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
     print 'Vel2Grid\n\n'+out+str(err)
 def Grid2Time(control_file="run/nlloc_control_grid2time.in"):
+    """Run Grid2Time
+
+    Args
+        control_file: str control file path
+    """
     process=subprocess.Popen(['Grid2Time',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
     print 'Grid2Time\n\n'+out+str(err)
 def NLLoc(control_file="run/nlloc_control_nlloc.in"):
+    """Run NLLoc
+
+    Args
+        control_file: str control file path
+    """
     process=subprocess.Popen(['NLLoc',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
     print 'NLLoc\n\n'+out+str(err)
 def Scat2Angle(control_file="run/nlloc_control_scat2angle.in"):
+    """Run Scat2Angle
+
+    Args
+        control_file: str control file path
+    """
     process=subprocess.Popen(['Scat2Angle',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
     print 'Scat2Angle\n\n'+out+str(err)
     
 def _setup(target='.',options=False):   
     """Sets up the NonLinLoc directory structure and control files in the target directory. Needs to be called before _run_nlloc.
+
+    Keyword Args
+        target: str target file directory
+        options: dict command line options
     """
     os.chdir(target)
     CWD=os.getcwd()
     _make_folders(target)
     _check_control_files(CWD,options)   
-def __run__(target='.',inputArgs=False):
+def __run__(target='.',input_args=False):
     """Main code for running pyNLLoc
 
     Args
         target - str target directory [default ='.']
-        inputArgs - list of command line flags [default=False] for more information on the command line flags use -h as a flag.
+        input_args - list of command line flags [default=False] for more information on the command line flags use -h as a flag.
     """
-    options,optionsMap=_parser(inputArgs)
+    options,optionsMap=_parser(input_args)
     if options['qsub']:
         optionsMap['DataPath']=optionsMap['DATAPATH']
         return pyqsub.submit(options,optionsMap,__name__)
@@ -356,12 +416,17 @@ def __run__(target='.',inputArgs=False):
         _run_nlloc(options)
 
 
-def _parser(inputArgs=False):
+def _parser(input_args=False):
+    """Command line parser for pyNLLoc
+
+    Keyword Args
+        input_args - list of command line flags [default=False] for more information on the command line flags use -h as a flag.
+    """
     description=__doc__+"\n\nCommand Line Arguments\n*********************************\n"
     optparsedescription="""Arguments are set as below, syntax is -dTest or --datafile=Test
-"""
+    """
     argparsedescription="""Arguments are set as below, syntax is -dTest or -d Test
-"""
+    """
     #Set up qsub defaults
     default_nodes=1
     default_ppn=1
@@ -438,8 +503,8 @@ def _parser(inputArgs=False):
                     i+=1
                 optionsMap[option.dest]=option.option_strings[i]
         #For testing
-        if inputArgs:
-            options=parser.parse_args(inputArgs)
+        if input_args:
+            options=parser.parse_args(input_args)
         else:
             options=parser.parse_args()
         options=vars(options)
@@ -521,8 +586,8 @@ def _parser(inputArgs=False):
         parser.add_option_group(group)    
         for option in parser.option_list:
             optionsMap[option.dest]=option.get_opt_string()
-        if inputArgs and len(inputArgs):
-            (options,args)=parser.parse_args(inputArgs)
+        if input_args and len(input_args):
+            (options,args)=parser.parse_args(input_args)
         else:
             (options,args)=parser.parse_args()
         options=vars(options)
@@ -568,6 +633,5 @@ def _parser(inputArgs=False):
                 parser.error('Walltime '+options['qsub_walltime']+' format incorrect, needs to be HH:MM:SS')
             walltime=60.*60.*int(options['qsub_walltime'].split(':')[0])+60.*int(options['qsub_walltime'].split(':')[1])+int(options['qsub_walltime'].split(':')[2])
     return options,optionsMap
-
 if __name__=='__main__':
     __run__()
