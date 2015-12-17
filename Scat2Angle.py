@@ -59,7 +59,58 @@ To run from within python, (assuming the module is on your PYTHONPATH)::
 
 This will run with the default options, although these can be customized - see the Scat2Angle.__run__ docstrings.
  
+Output file
+*********************************
 
+The output format for the scatangle file is:
+
+            Probability
+            StationName Azimuth TakeOffAngle
+            StationName Azimuth TakeOffAngle
+
+            Probability
+            .
+            .
+            .
+
+e.g.::
+
+            504.7
+            S0271   231.1   154.7
+            S0649   42.9    109.7
+            S0484   21.2    145.4
+            S0263   256.4   122.7
+            S0142   197.4   137.6
+            S0244   229.7   148.1
+            S0415   75.6    122.8
+            S0065   187.5   126.1
+            S0362   85.3    128.2
+            S0450   307.5   137.7
+            S0534   355.8   138.2
+            S0641   14.7    120.2
+            S0155   123.5   117
+            S0162   231.8   127.5
+            S0650   45.9    108.2
+            S0195   193.8   147.3
+            S0517   53.7    124.2
+            S0004   218.4   109.8
+            S0588   12.9    128.6
+            S0377   325.5   165.3
+            S0618   29.4    120.5
+            S0347   278.9   149.5
+            S0529   326.1   131.7
+            S0083   223.7   118.2
+            S0595   42.6    117.8
+            S0236   253.6   118.6
+
+            502.7
+            S0271   233.1   152.7
+            S0649   45.9    101.7
+            S0484   25.2    141.4
+            S0263   258.4   120.7
+            .
+            .
+            .
 """
 EXECUTABLE="GetNLLOCScatterAngles"#Default name for C++ executable compiled using make_angles.sh
 import glob,sys,os
