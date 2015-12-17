@@ -13,46 +13,46 @@ GetNLLOCScatterAngles: ran1.o alomax_matrix.o alomax_matrix_svd.o matrix_statist
 
 	$(CPP) -o GetNLLOCScatterAngles GetAngles.o GridLib.o util.o geo.o map_project.o ran1.o alomax_matrix.o alomax_matrix_svd.o matrix_statistics.o octtree.o vector.o
 
-GetAngles.o: GetAngles.cpp
+GetAngles.o:
 
 	$(CPP) $(CFLAGS) -I $(NLLOC_PATH) GetAngles.cpp -o GetAngles.o
 
-ran1.o: ran1.c
+ran1.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/ran1/ran1.c -o ran1.o
 
-alomax_matrix.o: alomax_matrix.c
+alomax_matrix.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/alomax_matrix/alomax_matrix.c -o alomax_matrix.o
 
-alomax_matrix_svd.o: alomax_matrix_svd.c
+alomax_matrix_svd.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/alomax_matrix/alomax_matrix_svd.c -o alomax_matrix_svd.o
 
-matrix_statistics.o: matrix_statistics.c
+matrix_statistics.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/matrix_statistics/matrix_statistics.c -o matrix_statistics.o
 
-octtree.o: octtree.c
+octtree.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/octtree/octtree.c -o octtree.o
 
-vector.o: vector.c
+vector.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/vector/vector.c -o vector.o
 
-GridLib.o: GridLib.c
+GridLib.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/GridLib.c -o GridLib.o
 
-map_project.o: map_project.c
+map_project.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/map_project.c -o map_project.o
 
-util.o: util.c
+util.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/util.c -o util.o
 
-geo.o: geo.c
+geo.o:
 	
 	$(CC) $(CFLAGS) $(NLLOC_PATH)/geo.c -o geo.o
