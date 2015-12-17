@@ -36,8 +36,6 @@ extern "C" {
     #include "GridLib.h"
 }
 using namespace std;
-//Protoype
-vector<vector<string > > getAngles(double x, double y, double z,double p,Stations sta) 
 //Stations class - list of station objects and filenames and grid dimensions
 class Stations{
     public:
@@ -46,6 +44,8 @@ class Stations{
         vector<int> dimension;//Dimension of the grid file (2D or 3D)
         vector<SourceDesc> srce;//NLLoc source object
 };
+//Protoype
+vector<vector<string > > getAngles(double x, double y, double z,double p,Stations sta);
 //Class to handle an x,y,z point
 class xyzNode{
 public:
@@ -291,7 +291,7 @@ int saveAngles(Angles angles,string filename,int gridSampling){
             }
             else{
                 //Otherwise output 1 when samples are drawn directly from the location distribution
-                file<<'1'<'\n';
+                file<<'1'<<'\n';
 
             }
 			int j;
