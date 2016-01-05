@@ -20,4 +20,4 @@ so a fixed versin of GridLib.c is provided in the pyNLLoc distribution. This is 
 
 
 --------------------------------------------------------------------------
-Written by David J Pugh <david.j.pugh@cantab.net>
+Written by David J Pugh <djpugh@gmail.com>
