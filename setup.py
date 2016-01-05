@@ -6,6 +6,7 @@ or python setup.py install
 
 
 """
+from __future__ import print_function
 from distutils.core import setup
 try:
   from setuptools import setup
@@ -18,6 +19,7 @@ except:
     _SETUPTOOLS=False
     from distutils.core import setup as setup
 import sys,shutil,os,datetime,subprocess,glob
+
 def setup_package(install=False,build=False,clean=False):
     """setup_package()
 
@@ -34,22 +36,29 @@ def setup_package(install=False,build=False,clean=False):
                 package_dir={'pyNLLoc':'.'},
                 requires=[],
                 install_requires=[],
-                provides=['pyNLLoc'],
+                provides=['pyNLLoc','Scat2Angle','XYZ2Angle'],
+                url='https://github.com/djpugh/pyNLLoc',
+                download_url='https://github.com/djpugh/pyNLLoc/tarball/v'+__version__,
+                bugtrack_url='https://github.com/djpugh/pyNLLoc/issues',
                 scripts=['pyNLLoc.py','Scat2Angle.py','XYZ2Angle.py'],
                 description='pyNLLoc: Python functions for NonLinLoc and Scat2Angle',
-                long_description=__doc__+'\n\n'+open('README').read()+'\n',
-                package_data={'pyNLLoc':['README','make_angles.sh','GridLib.c','GetAngles.cpp','NLLoc_code/*/*','NLLoc_code/*.*']},)
+                long_description=__doc__+'\n\n'+open('README.md').read()+'\n',
+                package_data={'pyNLLoc':['README','make_angles.sh','GridLib.c','GetAngles.cpp','NLLoc_code/*/*','NLLoc_code/*.*']},
+                classifiers=["Development Status :: 5 - Production/Stable",
+                             "Intended Audience :: Science/Research",
+                             "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+                             "Natural Language :: English",
+                             "Programming Language :: Python",
+                             "Programming Language :: C++",
+                             "Topic :: Scientific/Engineering"
+                            ])
     if _SETUPTOOLS:
-        print '\n\nUsing setuptools\n\n'
         kwargs['extras_require']={'Cluster':['pyqsub>=1.0.0']}
-        kwargs['dependency_links']=['https://raw.githubusercontent.com/djpugh/pyqsub/master/pyqsub.py#egg=pyqsub-1.0.0']
         kwargs['install_requires'].append('pyqsub>=1.0.0')
         kwargs.pop('scripts')
         kwargs['version']=__looseversion__
-        kwargs['entry_points']={'console_scripts': ['pyNLLoc = pyNLLoc:pyNLLoc_run','Scat2Angle = pyNLLoc:Scat2Angle_run','XYZ2Angle = pyNLLoc:XYZ2Angle_run','XYZ2Time = pyNLLoc:XYZ2Time_run']
+        kwargs['entry_points']={'console_scripts': ['pyNLLoc = pyNLLoc:pyNLLoc_run','Scat2Angle = pyNLLoc:Scat2Angle_run','XYZ2Angle = pyNLLoc:XYZ2Angle_run']#,'XYZ2Time = pyNLLoc:XYZ2Time_run']
                                 }
-    else:       
-        print '\n\nUsing distutils\n\n'
     if build or 'build_all' in sys.argv or 'build-all' in sys.argv:
         #clean dist dir
         try:
@@ -60,7 +69,7 @@ def setup_package(install=False,build=False,clean=False):
                     pass
         except:
             pass
-        print '------\nBUILDING DISTRIBUTIONS\n-----\n'
+        print ('------\nBUILDING DISTRIBUTIONS\n-----\n')
         clean_package()
         argv=[sys.executable,"setup.py","sdist"]
         subprocess.call(argv)
@@ -72,10 +81,13 @@ def setup_package(install=False,build=False,clean=False):
             argv=[sys.executable,"setup.py","bdist_egg"]
             subprocess.call(argv)
         clean_package()
+        argv=[sys.executable,"setup.py","bdist_wheel"]
+        subprocess.call(argv)      
+        clean_package()
         argv=[sys.executable,"setup.py","bdist_msi"]
         subprocess.call(argv)
         clean_package()
-        print '\n------\nBUILD COMPLETE\n------\n'
+        print ('\n------\nBUILD COMPLETE\n------\n')
     elif 'clean_all' in sys.argv or clean or 'clean-all' in sys.argv:
         argv=[sys.executable,"setup.py","clean","--all"]
         subprocess.call(argv)
@@ -105,7 +117,7 @@ def setup_package(install=False,build=False,clean=False):
             if ret!=0:
                 ret=os.system('./make_angles.sh')
             if ret!=0:
-                print '\n\n*******************************\n\nC++ module not automatically compiled.\nPlease build manually.\n\n*******************************\n\n'
+                print ('\n\n*******************************\n\nC++ module not automatically compiled.\nPlease build manually.\n\n*******************************\n\n')
 
         try:
             setup(**kwargs)
@@ -115,7 +127,7 @@ def setup_package(install=False,build=False,clean=False):
 def setup_help():
     #Run setup with cmd args (DEFAULT)
     if '--help' in sys.argv or '-h' in sys.argv:
-        print """setup.py script for pyNLLoc
+        print ("""setup.py script for pyNLLoc
           
 pyNLLoc can be installed from the source by calling:
 
@@ -129,17 +141,17 @@ This will install the module to the user site-packages directory. Alternatively,
 
      $ python setup.py install --prefix=/path/to/top_level_directory
 
-"""
+""")
         
     if '--help' in sys.argv or '-h' in sys.argv or '--help-commands' in sys.argv:
-        print "pyNLLoc has several additional commands in addition to the standard commands",
+        print ("pyNLLoc has several additional commands in addition to the standard commands",end='')
         if not '--help-commands' in sys.argv:
-            print "(see --help-commands)",
-            print "\b. These include:"
-            print ""
-        print """  build_all         build all distributions
+            print ("(see --help-commands)",end='')
+            print ("\b. These include:")
+            print ("")
+        print ("""  build_all         build all distributions
   clean_all         clean all cython and build related files
-    """
+    """)
 def clean_package():
   old_argv=sys.argv
   sys.argv=['clean_all']

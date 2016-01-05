@@ -1,5 +1,4 @@
-pyNLLoc
-***********************************
+# pyNLLoc
 
 This is a Python module for running NonLinLoc, including on a cluster, as well as providing utilities for converting location scatter files into angle distributions. The angle conversion utilities, Scat2Angle and XYZ2Angle require the C++ program, GetNLLOCScatterAngles to be compiled.
 
@@ -8,8 +7,7 @@ This module provides
     Scat2Angle - Convert location scatter distribution to angle distribution
     XYZ2Angle - Calculates the angles for given x, y, z coordinates
 
-Compiling GetNLLOCScatterAngles
-***********************************
+# Compiling GetNLLOCScatterAngles
 
 GetNLLOCScatterAngles is compiled from source, either using the makefile or the script make_angles.sh.
 

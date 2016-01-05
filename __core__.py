@@ -154,7 +154,29 @@ except:
     _ARGPARSE=False
 import optparse,os,glob,stat,sys,shutil,subprocess,textwrap
 import pyqsub#python module for cluster job submission using qsub.
-from pyqsub import isPath
+def is_path(string):
+    if type(string)==list:
+        for i,x in enumerate(string):
+            string[i]=is_path(x)
+        return string
+    if not string:
+        return string        
+    elif ',' in string:
+        #list
+        files=string.lstrip('[').rstrip(']').split(',')
+        for i,f in enumerate(files):
+            files[i]=is_path(f)
+        return files
+    elif string and '*' in string and os.path.exists(os.path.abspath(os.path.split(string)[0])):
+        return glob.glob(os.path.abspath(os.path.split(string)[0])+os.path.sep+os.path.split(string)[1])
+    elif string and '*' not in string and os.path.exists(os.path.abspath(string)):
+        if os.path.isdir(os.path.abspath(string)):
+            return os.path.abspath(string)+os.path.sep
+        return os.path.abspath(string)
+    if _ARGPARSE:
+        raise argparse.ArgumentTypeError('Path: "'+string+'" does not exist')
+    else:
+        raise ValueError('Path: "'+string+'" does not exist')
 def _make_folders(target='.'):
     """Make folder structure
 
@@ -338,7 +360,7 @@ def _run_nlloc(options=False):
         #Loop over models
         models=glob.glob(os.path.splitext(options['models'])[0]+'*.mod')
         for model in models:
-            print 'Runing model: '+model
+            print ('Runing model: '+model)
             _check_control_files('.',options,model_name=model)
             options['models']=False
             _run_nlloc(options)
@@ -357,7 +379,7 @@ def Vel2Grid(control_file="run/nlloc_control_vel2grid.in"):
     """
     process=subprocess.Popen(['Vel2Grid',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
-    print 'Vel2Grid\n\n'+out+str(err)
+    print ('Vel2Grid\n\n'+out+str(err))
 def Grid2Time(control_file="run/nlloc_control_grid2time.in"):
     """Run Grid2Time
 
@@ -366,7 +388,7 @@ def Grid2Time(control_file="run/nlloc_control_grid2time.in"):
     """
     process=subprocess.Popen(['Grid2Time',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
-    print 'Grid2Time\n\n'+out+str(err)
+    print ('Grid2Time\n\n'+out+str(err))
 def NLLoc(control_file="run/nlloc_control_nlloc.in"):
     """Run NLLoc
 
@@ -375,7 +397,7 @@ def NLLoc(control_file="run/nlloc_control_nlloc.in"):
     """
     process=subprocess.Popen(['NLLoc',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
-    print 'NLLoc\n\n'+out+str(err)
+    print ('NLLoc\n\n'+out+str(err))
 def Scat2Angle(control_file="run/nlloc_control_scat2angle.in"):
     """Run Scat2Angle
 
@@ -384,7 +406,7 @@ def Scat2Angle(control_file="run/nlloc_control_scat2angle.in"):
     """
     process=subprocess.Popen(['Scat2Angle',control_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err=process.communicate()
-    print 'Scat2Angle\n\n'+out+str(err)
+    print ('Scat2Angle\n\n'+out+str(err))
     
 def _setup(target='.',options=False):   
     """Sets up the NonLinLoc directory structure and control files in the target directory. Needs to be called before _run_nlloc.
@@ -490,8 +512,8 @@ def _parser(input_args=False):
                 # return a single string
                 return self._join_parts(parts)
         parser=argparse.ArgumentParser(prog='pyNLLoc',description=description+argparsedescription,formatter_class=IndentedHelpFormatterWithNL)
-        parser.add_argument('DataPath',type=isPath,help="Target Path use for the location, optional but must be specified either as a positional argument or as an optional argument (see -d below) If not specified defaults to all current directory",nargs="?")
-        parser.add_argument("-d","--datapath","--data_path",help='Target Path use for the location, optional but must be specified either as a positional argument or as an optional argument (see -d below) If not specified defaults to all current directory',type=isPath,dest='DATAPATH',default=False)
+        parser.add_argument('DataPath',type=is_path,help="Target Path use for the location, optional but must be specified either as a positional argument or as an optional argument (see -d below) If not specified defaults to all current directory",nargs="?")
+        parser.add_argument("-d","--datapath","--data_path",help='Target Path use for the location, optional but must be specified either as a positional argument or as an optional argument (see -d below) If not specified defaults to all current directory',type=is_path,dest='DATAPATH',default=False)
         parser.add_argument("-n","--noscatter","--no_scatter",help='Do not run scatter to angles conversion',action='store_true',dest='NoScatter',default=False)
         parser.add_argument("-m","--models_path","--multiple_models_path",help='Run inversion with multiple models. Model file endings are .mod. [default=False]',dest='models',default=False)
         group=parser.add_argument_group('Cluster',description="\nCommands for using pyNLLoc on a cluster environment using qsub/PBS")
@@ -509,7 +531,7 @@ def _parser(input_args=False):
             options=parser.parse_args()
         options=vars(options)
         if not options['DataPath'] and not options['DATAPATH']:
-            print "Data file not provided, using current directory."
+            print ("Data file not provided, using current directory.")
             options['DataPath']=os.path.abspath('./')
         elif options['DataPath'] and options['DATAPATH']:
             parser.error("Multiple data files specified.")
@@ -598,7 +620,7 @@ def _parser(input_args=False):
         if len(args):
             options['DataPath']=args[0]
         if not options['DataPath'] and not options['DATAPATH']:
-            print "Data file not provided, using current directory."
+            print ("Data file not provided, using current directory.")
             options['DataPath']=os.path.abspath('./')
         elif options['DataPath'] and options['DATAPATH']:
             parser.error("Multiple data files specified.")
@@ -606,7 +628,7 @@ def _parser(input_args=False):
             options['DataPath']=options['DATAPATH']
         options.pop('DATAPATH')    
         try:
-            options['DataPath']=isPath(options['DataPath'])
+            options['DataPath']=is_path(options['DataPath'])
         except ValueError:
             parser.error("Data file: \""+options['DataPath']+"\" does not exist")
     if options['models']:

@@ -54,7 +54,12 @@ try:
     _ARGPARSE=True
 except:
     _ARGPARSE=False
-import Scat2Angle,struct,shutil,os,glob,textwrap
+try:
+    from .Scat2Angle import write_stations, get_stations,get_angles
+except:
+    from Scat2Angle import write_stations, get_stations,get_angles
+
+import struct,shutil,os,glob,textwrap
 def make_scatter_file(x,y,z,endian='='):
     """Make the scatter file for the x y z coordinates
 
@@ -92,9 +97,9 @@ def get_angles(x,y,z,grid_path='./grid/',endian='=',phase='P'):
         endian: endian value
         phase: str phase to calculate angles for
     """
-    station_file=Scat2Angle.write_stations(Scat2Angle.get_stations(grid_path,phase),grid_path)
+    station_file=write_stations(get_stations(grid_path,phase),grid_path)
     scatter_file=make_scatter_file(x,y,z,endian)
-    Scat2Angle.get_angles(station_file,scatter_file)
+    get_angles(station_file,scatter_file)
     os.remove('xyz.scat')
     shutil.move('xyz.scatangle','xyz.angle')
 def latlon_xyz(latitude,longitude,depth,latitude_0,longitude_0,latitude_1,latitude_2):
@@ -133,12 +138,11 @@ def __run__():
         [options['X'],options['Y'],options['Z']]=latlon_xyz(options['X'],options['Y'],options['Z'],lat0,lon0,lat1,lat2)
     get_angles(options['X'],options['Y'],options['Z'],options['grid_path'],options['endian'],options['phase'])
     output=open('xyz.angle').readlines()
-    print 'Results for Location:\nX:'+str(options['X'])+' km  Y:'+str(options['Y'])+' km  Z:'+str(options['Z'])+' km\n'
-    print ''.join(output[1:])
+    print ('Results for Location:\nX:'+str(options['X'])+' km  Y:'+str(options['Y'])+' km  Z:'+str(options['Z'])+' km\n')
+    print (''.join(output[1:]))
 def time():
     raise NotImplementedError()
-    print 'To use XYZ2Time'
-
+    # print ('To use XYZ2Time')
 def parse_header_file(filename):
     """Parses hdr file for grid origin and parallels (Lambert transform)
 

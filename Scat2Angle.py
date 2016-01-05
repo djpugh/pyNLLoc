@@ -182,7 +182,7 @@ def get_angles(station_file,scatter_file,grid_sampling):
 def print_help():
     """Prints command line help message.
     """
-    print __doc__
+    print (__doc__)
 def __run__():
     """Main function, called as script
 
@@ -190,8 +190,8 @@ def __run__():
     For a list of the command line options, use the '-h' flag.
     """
     if len(sys.argv)!=2:
-        print 'Requires a control file.'
-        print 'For help use -h flag.'
+        print ('Requires a control file.')
+        print ('For help use -h flag.')
         return
     if '-h' in sys.argv or '--help' in sys.argv:
         print_help()
