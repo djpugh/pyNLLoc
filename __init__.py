@@ -5,7 +5,7 @@ Code by David J Pugh
 """
 
 __author__='David J Pugh'
-__version__='1.0.0'
+__version__='1.0.1'
 __email__='djpugh@gmail.com'
 __looseversion__=__version__
 __build__=1
