@@ -55,9 +55,11 @@ try:
 except:
     _ARGPARSE=False
 try:
-    from .Scat2Angle import write_stations, get_stations,get_angles
+    from .Scat2Angle import write_stations, get_stations
+    from .Scat2Angle import get_angles as get_scat_angles
 except:
-    from Scat2Angle import write_stations, get_stations,get_angles
+    from Scat2Angle import write_stations, get_stations
+    from Scat2Angle import get_angles as get_scat_angles
 
 import struct,shutil,os,glob,textwrap
 def make_scatter_file(x,y,z,endian='='):
@@ -99,7 +101,7 @@ def get_angles(x,y,z,grid_path='./grid/',endian='=',phase='P'):
     """
     station_file=write_stations(get_stations(grid_path,phase),grid_path)
     scatter_file=make_scatter_file(x,y,z,endian)
-    get_angles(station_file,scatter_file)
+    get_scat_angles(station_file,scatter_file)
     os.remove('xyz.scat')
     shutil.move('xyz.scatangle','xyz.angle')
 def latlon_xyz(latitude,longitude,depth,latitude_0,longitude_0,latitude_1,latitude_2):
